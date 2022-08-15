@@ -17,6 +17,7 @@ def PIL_loader(path):
 
 def default_reader(fileList):
     imgList = []
+    # txt : path label(int) \n -> 0001.jpg 0
     with open(fileList, 'r') as file:
         for line in file.readlines():
             imgPath, label = line.strip().split(' ')
@@ -35,8 +36,10 @@ class ImageList(data.Dataset):
         imgPath, target = self.imgList[index]
         img = self.loader(os.path.join(self.root, imgPath))
 
-        if self.transform is not None:
+        # if self.transform is not None:
+        if self.transform:
             img = self.transform(img)
+            
         return img, target
 
     def __len__(self):
