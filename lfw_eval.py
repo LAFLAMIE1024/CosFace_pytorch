@@ -11,8 +11,10 @@ cudnn.benchmark = True
 
 import net
 
-
+# Extract deep feature of the input image by using the given model
+# param "is_gray" -> True / False : Different Transformation
 def extractDeepFeature(img, model, is_gray):
+    
     if is_gray:
         transform = transforms.Compose([
             transforms.Grayscale(),
@@ -24,49 +26,63 @@ def extractDeepFeature(img, model, is_gray):
             transforms.ToTensor(),  # range [0, 255] -> [0.0,1.0]
             transforms.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))  # range [0.0, 1.0] -> [-1.0,1.0]
         ])
-    img, img_ = transform(img), transform(F.hflip(img))
+        
+    img, img_ = transform(img), transform(F.hflip(img)) # F.hflip(img) -> Horizontally flip the given image.
     img, img_ = img.unsqueeze(0).to('cuda'), img_.unsqueeze(0).to('cuda')
-    ft = torch.cat((model(img), model(img_)), 1)[0].to('cpu')
-    return ft
+    
+    feature = torch.cat((model(img), model(img_)), 1)[0].to('cpu')
+    return feature
 
 
 def KFold(n=6000, n_folds=10):
+    
     folds = []
     base = list(range(n))
+    
     for i in range(n_folds):
-        test = base[i * n / n_folds:(i + 1) * n / n_folds]
+        test = base[ i * n / n_folds : (i + 1) * n / n_folds]
         train = list(set(base) - set(test))
         folds.append([train, test])
+        
     return folds
 
 
 def eval_acc(threshold, diff):
     y_true = []
     y_predict = []
+    
     for d in diff:
         same = 1 if float(d[2]) > threshold else 0
         y_predict.append(same)
         y_true.append(int(d[3]))
+        
     y_true = np.array(y_true)
     y_predict = np.array(y_predict)
     accuracy = 1.0 * np.count_nonzero(y_true == y_predict) / len(y_true)
+    
     return accuracy
 
 
 def find_best_threshold(thresholds, predicts):
     best_threshold = best_acc = 0
+    
     for threshold in thresholds:
         accuracy = eval_acc(threshold, predicts)
+        
         if accuracy >= best_acc:
             best_acc = accuracy
             best_threshold = threshold
+            
     return best_threshold
 
-
+# Evaluate with the given model : checkpoint/CosFace_24_checkpoint.pth
+# However, this pretrained model is not provided (?
 def eval(model, model_path=None, is_gray=False):
+    
     predicts = []
     model.load_state_dict(torch.load(model_path))
     model.eval()
+    
     root = '/home/wangyf/dataset/lfw/lfw-112X96/'
     with open('/home/wangyf/Project/sphereface/test/data/pairs.txt') as f:
         pairs_lines = f.readlines()[1:]
@@ -86,25 +102,32 @@ def eval(model, model_path=None, is_gray=False):
             else:
                 raise ValueError("WRONG LINE IN 'pairs.txt! ")
 
+            # Read in image1 and image2
             with open(root + name1, 'rb') as f:
                 img1 =  Image.open(f).convert('RGB')
             with open(root + name2, 'rb') as f:
                 img2 =  Image.open(f).convert('RGB')
+
+            # Extract their features
             f1 = extractDeepFeature(img1, model, is_gray)
             f2 = extractDeepFeature(img2, model, is_gray)
 
+            # Calculate their distances by formula
             distance = f1.dot(f2) / (f1.norm() * f2.norm() + 1e-5)
             predicts.append('{}\t{}\t{}\t{}\n'.format(name1, name2, distance, sameflag))
 
     accuracy = []
     thd = []
+    
     folds = KFold(n=6000, n_folds=10)
     thresholds = np.arange(-1.0, 1.0, 0.005)
     predicts = np.array(map(lambda line: line.strip('\n').split(), predicts))
+    
     for idx, (train, test) in enumerate(folds):
         best_thresh = find_best_threshold(thresholds, predicts[train])
         accuracy.append(eval_acc(best_thresh, predicts[test]))
         thd.append(best_thresh)
+
     print('LFWACC={:.4f} std={:.4f} thd={:.4f}'.format(np.mean(accuracy), np.std(accuracy), np.mean(thd)))
 
     return np.mean(accuracy), predicts
