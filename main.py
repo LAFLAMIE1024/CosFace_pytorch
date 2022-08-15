@@ -17,7 +17,7 @@ from dataset import ImageList
 import lfw_eval
 import layer
 
-#os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3"
+# os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3"
 
 # Training settings
 parser = argparse.ArgumentParser(description='PyTorch CosFace')
@@ -33,14 +33,17 @@ parser.add_argument('--batch_size', type=int, default=512,
                     help='input batch size for training (default: 512)')
 parser.add_argument('--is_gray', type=bool, default=False,
                     help='Transform input image to gray or not  (default: False)')
+
 # Network
 parser.add_argument('--network', type=str, default='sphere20',
                     help='Which network for train. (sphere20, sphere64, LResNet50E_IR)')
+
 # Classifier
 parser.add_argument('--num_class', type=int, default=None,
                     help='number of people(class)')
 parser.add_argument('--classifier_type', type=str, default='MCP',
                     help='Which classifier for train. (MCP, AL, L)')
+
 # LR policy
 parser.add_argument('--epochs', type=int, default=30,
                     help='number of epochs to train (default: 30)')
@@ -52,6 +55,7 @@ parser.add_argument('--momentum', type=float, default=0.9,
                     help='SGD momentum (default: 0.9)')
 parser.add_argument('--weight_decay', type=float, default=5e-4,
                     metavar='W', help='weight decay (default: 0.0005)')
+
 # Common settings
 parser.add_argument('--log_interval', type=int, default=100,
                     help='how many batches to wait before logging training status')
@@ -61,6 +65,7 @@ parser.add_argument('--no_cuda', type=bool, default=False,
                     help='disables CUDA training')
 parser.add_argument('--workers', type=int, default=4,
                     help='how many workers to load data')
+
 args = parser.parse_args()
 args.cuda = not args.no_cuda and torch.cuda.is_available()
 device = torch.device("cuda" if args.cuda else "cpu")
@@ -94,7 +99,9 @@ def main():
 
     model = torch.nn.DataParallel(model).to(device)
     model_eval = model_eval.to(device)
+    
     print(model)
+    
     if not os.path.exists(args.save_path):
         os.makedirs(args.save_path)
     model.module.save(args.save_path + 'CosFace_0_checkpoint.pth')
@@ -120,6 +127,7 @@ def main():
             transforms.ToTensor(),  # range [0, 255] -> [0.0,1.0]
             transforms.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))  # range [0.0, 1.0] -> [-1.0,1.0]
         ])
+        
     train_loader = torch.utils.data.DataLoader(
         ImageList(root=args.root_path, fileList=args.train_list,
                   transform=train_transform),
@@ -138,31 +146,39 @@ def main():
 
     # ----------------------------------------train----------------------------------------
     # lfw_eval.eval(args.save_path + 'CosFace_0_checkpoint.pth')
+    
     for epoch in range(1, args.epochs + 1):
         train(train_loader, model, classifier, criterion, optimizer, epoch)
         model.module.save(args.save_path + 'CosFace_' + str(epoch) + '_checkpoint.pth')
         lfw_eval.eval(model_eval, args.save_path + 'CosFace_' + str(epoch) + '_checkpoint.pth', args.is_gray)
+        
     print('Finished Training')
 
 
 def train(train_loader, model, classifier, criterion, optimizer, epoch):
+  
     model.train()
     print_with_time('Epoch {} start training'.format(epoch))
+    
     time_curr = time.time()
     loss_display = 0.0
 
     for batch_idx, (data, target) in enumerate(train_loader, 1):
+      
         iteration = (epoch - 1) * len(train_loader) + batch_idx
         adjust_learning_rate(optimizer, iteration, args.step_size)
         data, target = data.to(device), target.to(device)
+        
         # compute output
         output = model(data)
         if isinstance(classifier, torch.nn.Linear):
             output = classifier(output)
         else:
             output = classifier(output, target)
+            
         loss = criterion(output, target)
         loss_display += loss.item()
+        
         # compute gradient and do SGD step
         optimizer.zero_grad()
         loss.backward()
@@ -193,8 +209,10 @@ def print_with_time(string):
 def adjust_learning_rate(optimizer, iteration, step_size):
     """Sets the learning rate to the initial LR decayed by 10 each step size"""
     if iteration in step_size:
+      
         lr = args.lr * (0.1 ** (step_size.index(iteration) + 1))
         print_with_time('Adjust learning rate to {}'.format(lr))
+        
         for param_group in optimizer.param_groups:
             param_group['lr'] = lr
     else:
