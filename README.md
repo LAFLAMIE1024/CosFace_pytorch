@@ -25,11 +25,16 @@ Old Requirement
 
 ### Result(new)
 
-Single model trained on CAISA-WebFace achieves **~99.2%** accuracy on LFW (Link: https://pan.baidu.com/s/1uOBATynzBTzZwrIKC4kcAA Password: 69e6)
+Single model trained on CAISA-WebFace achieves **~99.2%** accuracy on LFW ( [Downlaod Link](https://pan.baidu.com/s/1uOBATynzBTzZwrIKC4kcAA) Password: 69e6)
 
+**NOTE: PyTorch has already been upgraded to 1.1x, and I would try to transfer the whole repo into a up-to-date environment**
+
+
+Commented at 2018 by the original author
+------------
 Note: Pytorch 0.4 seems to be very different from 0.3, which leads me to not fully reproduce the previous results. Currently still adjusting parameters....
-
 The initialization of the fully connected layer does not use Xavier but is more conducive to model convergence.
+
 
 ### Result(old)
 
