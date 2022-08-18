@@ -1,5 +1,8 @@
 # CosFace_pytorch
 
+
+## Goal of this repo: **Transfer this model to a updated environment**
+
 ***Pytorch implementation of CosFace***
 
 Old Requirement
@@ -12,8 +15,6 @@ Old Requirement
 - CUDA:  8.0
 
 ------------
-
-Goal of this repo: **Transfer this model to a updated environment**
 
 -  Database:  `WebFace` or `VggFace2` (You should first complete the data preprocessing section by following these steps https://github.com/wy1iu/sphereface#part-1-preprocessing)
 - Network:  `sphere20`, `sphere64`, `LResnet50E-IR`(In ArcFace paper)
