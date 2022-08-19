@@ -14,16 +14,10 @@ import net
 # Extract deep feature of the input image by using the given model
 # param "is_gray" -> True / False : Different Transformation
 def extractDeepFeature(img, model, is_gray):
-    
-    if is_gray:
-        transform = transforms.Compose([
-            """
+    """
             torchvision.transforms.Grayscale() is bascially the same in both versions.
-            """
-            transforms.Grayscale(),
-            
-            
-            """
+
+
             torchvision.transforms.ToTensor()
                 0.13.1 : 
                 Converts a PIL Image or numpy.ndarray (H x W x C) in the range [0, 255] to a torch.FloatTensor of shape (C x H x W) in the range [0.0, 1.0] 
@@ -32,14 +26,10 @@ def extractDeepFeature(img, model, is_gray):
                 
                 Old version:
                 Converts a PIL Image or numpy.ndarray (H x W x C) in the range [0, 255] to a torch.FloatTensor of shape (C x H x W) in the range [0.0, 1.0].
-            """
-            transforms.ToTensor(),  # range [0, 255] -> [0.0,1.0]
-            
-            
-            """
+
+
             torchvision.transforms.Normalize()
                 Descriptions are the basically the same, however:
-            
                 0.13.1 : 
                     NOTE: This transform acts out of place, i.e., it does not mutate the input tensor.
                     Parameters:
@@ -52,7 +42,13 @@ def extractDeepFeature(img, model, is_gray):
                     Parameters:	
                         mean (sequence) – Sequence of means for each channel.
                         std (sequence) – Sequence of standard deviations for each channel.
-            """
+    """
+    
+    if is_gray:
+        
+        transform = transforms.Compose([
+            transforms.Grayscale(),
+            transforms.ToTensor(),  # range [0, 255] -> [0.0,1.0]
             transforms.Normalize(mean=(0.5,), std=(0.5,))  # range [0.0, 1.0] -> [-1.0,1.0]
         ])
     else:
