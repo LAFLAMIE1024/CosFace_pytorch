@@ -17,8 +17,42 @@ def extractDeepFeature(img, model, is_gray):
     
     if is_gray:
         transform = transforms.Compose([
+            """
+            torchvision.transforms.Grayscale() is bascially the same in both versions.
+            """
             transforms.Grayscale(),
+            
+            
+            """
+            torchvision.transforms.ToTensor()
+                0.13.1 : 
+                Converts a PIL Image or numpy.ndarray (H x W x C) in the range [0, 255] to a torch.FloatTensor of shape (C x H x W) in the range [0.0, 1.0] 
+                if the PIL Image belongs to one of the modes (L, LA, P, I, F, RGB, YCbCr, RGBA, CMYK, 1) or if the numpy.ndarray has dtype = np.uint8
+                In the other cases, tensors are returned without scaling.
+                
+                Old version:
+                Converts a PIL Image or numpy.ndarray (H x W x C) in the range [0, 255] to a torch.FloatTensor of shape (C x H x W) in the range [0.0, 1.0].
+            """
             transforms.ToTensor(),  # range [0, 255] -> [0.0,1.0]
+            
+            
+            """
+            torchvision.transforms.Normalize()
+                Descriptions are the basically the same, however:
+            
+                0.13.1 : 
+                    NOTE: This transform acts out of place, i.e., it does not mutate the input tensor.
+                    Parameters:
+                        mean (sequence) – Sequence of means for each channel.
+                        std (sequence) – Sequence of standard deviations for each channel.
+                        inplace (bool,optional) – Bool to make this operation in-place. <- we need to keep this inplace to be True to make sure this function acts like before.
+                
+                Old version:
+                    NOTE: This transform acts in-place, i.e., it mutates the input tensor.
+                    Parameters:	
+                        mean (sequence) – Sequence of means for each channel.
+                        std (sequence) – Sequence of standard deviations for each channel.
+            """
             transforms.Normalize(mean=(0.5,), std=(0.5,))  # range [0.0, 1.0] -> [-1.0,1.0]
         ])
     else:
@@ -27,7 +61,7 @@ def extractDeepFeature(img, model, is_gray):
             transforms.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))  # range [0.0, 1.0] -> [-1.0,1.0]
         ])
         
-    img, img_ = transform(img), transform(F.hflip(img)) # F.hflip(img) -> Horizontally flip the given image.
+    img, img_ = transform(img), transform(F.hflip(img)) # Basically the same in both versions.
     img, img_ = img.unsqueeze(0).to('cuda'), img_.unsqueeze(0).to('cuda')
     
     feature = torch.cat((model(img), model(img_)), 1)[0].to('cpu')
