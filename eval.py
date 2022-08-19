@@ -1,14 +1,14 @@
 from PIL import Image
 import numpy as np
 
-from torchvision.transforms import functional as F
-import torchvision.transforms as transforms
 import torch
-from torch.autograd import Variable
 import torch.backends.cudnn as cudnn
+from torch.autograd import Variable
+
+import torchvision.transforms as transforms
+from torchvision.transforms import functional as F
 
 cudnn.benchmark = True
-
 import net
 
 # Extract deep feature of the input image by using the given model
