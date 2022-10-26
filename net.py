@@ -37,7 +37,7 @@ class sphere(nn.Module):
         self.layer2 = self._make_layer(block, filter_list[1], filter_list[2], layers[1], stride=2)
         self.layer3 = self._make_layer(block, filter_list[2], filter_list[3], layers[2], stride=2)
         self.layer4 = self._make_layer(block, filter_list[3], filter_list[4], layers[3], stride=2)
-        self.fc     = nn.Linear(512 * 7 * 7, 512)
+        self.fc     = nn.Linear(512 * 7 * 6, 512)
 
         # Weight initialization
         for m in self.modules():
